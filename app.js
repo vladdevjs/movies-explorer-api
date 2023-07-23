@@ -21,8 +21,8 @@ mongoose.connect(mongoURI, {
   useNewUrlParser: true,
 });
 
-app.use(limiter);
 app.use(requestLogger);
+app.use(limiter);
 app.use(routes);
 app.use('*', notFound);
 

@@ -6,13 +6,14 @@ const { secretKey } = require('../config');
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
 const ConflictError = require('../errors/conflict-err');
+const { conflictMessage, userNotFoundMessage, badRequestMessage } = require('../helpers/errorMessages');
 
 const User = require('../models/user');
 
 const getUserInfo = (req, res, next) => {
   User.findById({ _id: req.user._id })
     .select('email name')
-    .orFail(new NotFoundError('Запрашиваемый пользователь не найден'))
+    .orFail(new NotFoundError(userNotFoundMessage))
     .then((user) => res.send(user))
     .catch((err) => next(err));
 };
@@ -24,11 +25,11 @@ const updateUserInfo = (req, res, next) => {
     { email, name },
     { new: true, runValidators: true },
   )
-    .orFail(new NotFoundError('Запрашиваемый пользователь не найден'))
+    .orFail(new NotFoundError(userNotFoundMessage))
     .then((updatedUser) => res.send(updatedUser))
     .catch((err) => {
       if (err instanceof ValidationError) {
-        next(new BadRequestError('Предоставлены некорректные данные'));
+        next(new BadRequestError(badRequestMessage));
       } else {
         next(err);
       }
@@ -51,10 +52,10 @@ const createUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof ValidationError) {
-        next(new BadRequestError('Предоставлены некорректные данные'));
+        next(new BadRequestError(badRequestMessage));
       } else if (err.code === 11000) {
         next(
-          new ConflictError('Пользователь с таким email уже зарегистрирован'),
+          new ConflictError(conflictMessage),
         );
       } else {
         next(err);
