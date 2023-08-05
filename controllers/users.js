@@ -49,7 +49,7 @@ const setJwtCookie = (res, userId) => {
   res.cookie('jwt', token, {
     httpOnly: true,
     maxAge: 3600000 * 24 * 7,
-    sameSite: 'strict',
+    sameSite: 'none',
     secure: true,
   });
 };
@@ -98,7 +98,8 @@ const login = (req, res, next) => {
 const signout = (req, res) => {
   res.clearCookie('jwt', {
     httpOnly: true,
-    sameSite: 'Strict',
+    sameSite: 'none',
+    secure: true,
   });
   res.json({ message: 'Вы успешно вышли' });
 };
