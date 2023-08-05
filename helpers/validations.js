@@ -34,7 +34,6 @@ const validateMovieData = celebrate({
     image: Joi.string().required().regex(urlRegex),
     trailerLink: Joi.string().required().regex(urlRegex),
     thumbnail: Joi.string().required().regex(urlRegex),
-    owner: Joi.string().required().hex().length(24),
     movieId: Joi.number().required(),
     nameRU: Joi.string().required().min(2),
     nameEN: Joi.string().required().min(2),

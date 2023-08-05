@@ -6,7 +6,11 @@ const { secretKey } = require('../config');
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
 const ConflictError = require('../errors/conflict-err');
-const { conflictMessage, userNotFoundMessage, badRequestMessage } = require('../helpers/errorMessages');
+const {
+  conflictMessage,
+  userNotFoundMessage,
+  badRequestMessage,
+} = require('../helpers/errorMessages');
 
 const User = require('../models/user');
 
@@ -23,29 +27,46 @@ const updateUserInfo = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { email, name },
-    { new: true, runValidators: true },
+    { new: true, runValidators: true }
   )
     .orFail(new NotFoundError(userNotFoundMessage))
     .then((updatedUser) => res.send(updatedUser))
     .catch((err) => {
       if (err instanceof ValidationError) {
         next(new BadRequestError(badRequestMessage));
+      } else if (err.code === 11000) {
+        next(new ConflictError(conflictMessage));
       } else {
         next(err);
       }
     });
 };
 
+const setJwtCookie = (res, userId) => {
+  const token = jwt.sign({ _id: userId }, secretKey, {
+    expiresIn: '7d',
+  });
+  res.cookie('jwt', token, {
+    httpOnly: true,
+    maxAge: 3600000 * 24 * 7,
+    sameSite: 'strict',
+    secure: true,
+  });
+};
+
 const createUser = (req, res, next) => {
   const { name, email, password } = req.body;
   bcrypt
     .hash(password, 10)
-    .then((hashedPassword) => User.create({
-      name,
-      email,
-      password: hashedPassword,
-    }))
+    .then((hashedPassword) =>
+      User.create({
+        name,
+        email,
+        password: hashedPassword,
+      })
+    )
     .then((user) => {
+      setJwtCookie(res, user._id);
       // eslint-disable-next-line no-shadow
       const { _id, email, name } = user;
       res.status(201).send({ _id, email, name });
@@ -54,9 +75,7 @@ const createUser = (req, res, next) => {
       if (err instanceof ValidationError) {
         next(new BadRequestError(badRequestMessage));
       } else if (err.code === 11000) {
-        next(
-          new ConflictError(conflictMessage),
-        );
+        next(new ConflictError(conflictMessage));
       } else {
         next(err);
       }
@@ -68,17 +87,10 @@ const login = (req, res, next) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, secretKey, {
-        expiresIn: '7d',
-      });
-      res
-        .cookie('jwt', token, {
-          httpOnly: true,
-          maxAge: 3600000 * 24 * 7,
-          sameSite: 'strict',
-          secure: true,
-        })
-        .send({ message: 'Авторизация прошла успешно' });
+      setJwtCookie(res, user._id);
+      // eslint-disable-next-line no-shadow
+      const { _id, email, name } = user;
+      res.send({ _id, email, name });
     })
     .catch(next);
 };

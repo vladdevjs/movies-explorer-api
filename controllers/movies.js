@@ -5,7 +5,11 @@ const Movie = require('../models/movie');
 const NotFoundError = require('../errors/not-found-err');
 const BadRequestError = require('../errors/bad-request-err');
 const ForbiddenError = require('../errors/forbidden-err');
-const { forbiddenMessage, movieNotFoundMessage, badRequestMessage } = require('../helpers/errorMessages');
+const {
+  forbiddenMessage,
+  movieNotFoundMessage,
+  badRequestMessage,
+} = require('../helpers/errorMessages');
 
 const getAllMovies = (req, res, next) => {
   Movie.find({ owner: req.user._id })
@@ -24,8 +28,10 @@ const createMovie = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof ValidationError) {
+        console.error(err);
         next(new BadRequestError(err.message));
       } else {
+        console.error(err);
         next(err);
       }
     });
