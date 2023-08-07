@@ -26,7 +26,7 @@ mongoose.connect(mongoURI, {
 });
 
 app.use(requestLogger);
-// app.use(limiter);
+app.use(limiter);
 app.use(routes);
 app.use('*', notFound);
 
