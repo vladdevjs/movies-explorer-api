@@ -15,7 +15,7 @@ const app = express();
 
 app.use(helmet());
 app.use(
-  cors({ origin: 'https://vladmovies.nomoreparties.co', credentials: true })
+  cors({ origin: 'https://vladmovies.nomoreparties.co/', credentials: true })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
